@@ -1,7 +1,11 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/order.dto';
-import { Screening } from 'src/films/schema/films.schema';
-import { FilmsDataProvider } from 'src/repository/films.repository';
+import { Screening } from '../films/schema/films.schema';
+import { FilmsDataProvider } from '../repository/films.repository';
 
 @Injectable()
 export class OrderService {
@@ -30,13 +34,26 @@ export class OrderService {
         throw new ConflictException(`Сеанс с кодом ${session} не найден`);
       }
 
+      if (row > screeningData.rows || seat > screeningData.seats) {
+        throw new BadRequestException('Указанное место не существует в зале');
+      }
+
       const seatPosition = `${row}:${seat}`;
       if (screeningData.taken.includes(seatPosition)) {
         throw new ConflictException('Место уже забронировано другим зрителем');
       }
+    }
 
-      screeningData.taken.push(seatPosition);
-      await filmData.save();
+    for (const { film, session, row, seat } of tickets) {
+      const reserved = await this.filmsDataProvider.reserveSeat(
+        film,
+        session,
+        `${row}:${seat}`,
+      );
+
+      if (!reserved) {
+        throw new ConflictException('Место уже забронировано другим зрителем');
+      }
     }
 
     return {

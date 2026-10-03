@@ -1,6 +1,8 @@
 import {
   IsString,
   IsNumber,
+  IsInt,
+  Min,
   IsArray,
   IsEmail,
   IsOptional,
@@ -18,10 +20,12 @@ export class TicketDto {
   @IsString()
   daytime: string;
 
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   row: number;
 
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   seat: number;
 
   @IsNumber()

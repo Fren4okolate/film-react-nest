@@ -1,9 +1,9 @@
 import { NotFoundException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { GetFilmDto } from 'src/films/schedule/schedule';
-import { CinemaFilm } from 'src/films/schema/films.schema';
-import { GetScheduleDto } from 'src/films/dto/films.dto';
+import { GetFilmDto } from '../films/schedule/schedule';
+import { CinemaFilm } from '../films/schema/films.schema';
+import { GetScheduleDto } from '../films/dto/films.dto';
 
 @Injectable()
 export class FilmsDataProvider {
@@ -59,5 +59,25 @@ export class FilmsDataProvider {
   async locateFilmById(filmId: string) {
     const filmData = await this.cinemaFilmModel.findOne({ id: filmId }).exec();
     return filmData;
+  }
+
+  async reserveSeat(
+    filmId: string,
+    sessionId: string,
+    seatPosition: string,
+  ): Promise<boolean> {
+    const result = await this.cinemaFilmModel
+      .updateOne(
+        {
+          id: filmId,
+          schedule: {
+            $elemMatch: { id: sessionId, taken: { $ne: seatPosition } },
+          },
+        },
+        { $addToSet: { 'schedule.$.taken': seatPosition } },
+      )
+      .exec();
+
+    return result.modifiedCount === 1;
   }
 }
