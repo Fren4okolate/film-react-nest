@@ -1,8 +1,6 @@
 import {
   IsString,
   IsNumber,
-  IsInt,
-  Min,
   IsArray,
   IsEmail,
   IsOptional,
@@ -20,12 +18,10 @@ export class TicketDto {
   @IsString()
   daytime: string;
 
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   row: number;
 
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   seat: number;
 
   @IsNumber()
@@ -45,4 +41,13 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => TicketDto)
   tickets: TicketDto[];
+}
+
+export class OrderResponseDto {
+  total: number;
+  items: TicketDto[];
+  updatedSessions: Array<{
+    sessionId: string;
+    taken: string;
+  }>;
 }

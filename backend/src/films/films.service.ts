@@ -9,7 +9,7 @@ export class FilmsService {
     return this.filmsDataProvider.obtainAllFilms();
   }
 
-  fetchFilmSchedule(filmId: string) {
+  fetchFilmSchedule(filmId: string) { 
     return this.filmsDataProvider.obtainFilmSchedule(filmId);
   }
 }

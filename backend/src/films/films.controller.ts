@@ -15,7 +15,7 @@ export class FilmsController {
   }
 
   @Get('/:id/schedule')
-  obtainFilmScreenings(@Param('id') filmId: string) {
+  obtainFilmScreenings(@Param('id') filmId: string) { 
     return this.filmsService.fetchFilmSchedule(filmId);
   }
 }

@@ -5,8 +5,12 @@ export const configProvider = {
   provide: 'CONFIG',
   useValue: <AppConfig>{
     database: {
-      driver: process.env.DATABASE_DRIVER || 'mongodb',
-      url: process.env.DATABASE_URL || 'mongodb://localhost:27017/afisha',
+      driver: process.env.DATABASE_DRIVER || 'postgres',
+      host: process.env.DATABASE_HOST || 'localhost',
+      port: process.env.DATABASE_PORT || '5432',
+      user: process.env.DATABASE_USERNAME || 'film_user',
+      password: process.env.DATABASE_PASSWORD || 'film_pass',
+      name: process.env.DATABASE_NAME || 'film_db',
     },
   },
 };
@@ -17,5 +21,9 @@ export interface AppConfig {
 
 export interface AppConfigDatabase {
   driver: string;
-  url: string;
+  host: string;
+  port: string;
+  user: string;
+  password: string;
+  name: string;
 }

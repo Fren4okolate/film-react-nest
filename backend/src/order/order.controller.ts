@@ -14,7 +14,7 @@ export class OrderController {
 
   @Post()
   @UsePipes(new ValidationPipe())
-  createOrder(@Body() orderInfo: CreateOrderDto) {
+  async createOrder(@Body() orderInfo: CreateOrderDto) {
     return this.orderService.processOrderCreation(orderInfo);
   }
 }

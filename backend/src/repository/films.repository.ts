@@ -1,48 +1,65 @@
 import { NotFoundException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { GetFilmDto } from '../films/schedule/schedule';
-import { CinemaFilm } from '../films/schema/films.schema';
-import { GetScheduleDto } from '../films/dto/films.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Film } from 'src/films/entities/film.entity';
+import { Schedule } from 'src/films/entities/schedule.entity';
+import { GetFilmDto, GetScheduleDto } from 'src/films/dto/films.dto';
 
 @Injectable()
 export class FilmsDataProvider {
   constructor(
-    @InjectModel(CinemaFilm.name)
-    private readonly cinemaFilmModel: Model<CinemaFilm>,
+    @InjectRepository(Film)
+    private readonly filmRepository: Repository<Film>,
+    @InjectRepository(Schedule) 
+    public readonly scheduleRepository: Repository<Schedule>,
   ) {}
 
-  private convertToFilmDto(): (film: CinemaFilm) => GetFilmDto {
-    return (filmData) => {
-      return {
-        id: filmData.id,
-        rating: filmData.rating,
-        director: filmData.director,
-        tags: filmData.tags,
-        image: filmData.image,
-        cover: filmData.cover,
-        title: filmData.title,
-        about: filmData.about,
-        description: filmData.description,
-        schedule: filmData.schedule,
-      };
+  private convertToScheduleDto(schedule: Schedule): GetScheduleDto {
+    const takenArray = schedule.taken
+      ? schedule.taken.split(',').filter((item) => item.trim() !== '')
+      : [];
+
+    return {
+      id: schedule.id,
+      daytime: schedule.daytime,
+      hall: schedule.hall,
+      rows: schedule.rows,
+      seats: schedule.seats,
+      price: Number(schedule.price),
+      taken: takenArray,
     };
   }
 
+private convertToFilmDto(filmData: Film): GetFilmDto {
+  return {
+    id: filmData.id,
+    title: filmData.title,
+    description: filmData.description,
+    image: filmData.image,
+    cover: filmData.cover,  
+    schedule: filmData.schedules?.map(this.convertToScheduleDto.bind(this)) || [],
+  };
+}
+
   async obtainAllFilms(): Promise<{ total: number; items: GetFilmDto[] }> {
-    const filmCollection = await this.cinemaFilmModel.find().exec();
-    const filmCount = await this.cinemaFilmModel.countDocuments().exec();
+    const filmCollection = await this.filmRepository.find({
+      relations: ['schedules'],
+    });
+    const filmCount = filmCollection.length;
 
     return {
       total: filmCount,
-      items: filmCollection.map(this.convertToFilmDto()),
+      items: filmCollection.map(this.convertToFilmDto.bind(this)),
     };
   }
 
   async obtainFilmSchedule(
-    filmId: string,
+    filmId: string, 
   ): Promise<{ total: number; items: GetScheduleDto[] | null }> {
-    const filmData = await this.cinemaFilmModel.findOne({ id: filmId }).exec();
+    const filmData = await this.filmRepository.findOne({
+      where: { id: filmId },
+      relations: ['schedules'],
+    });
 
     if (!filmData) {
       throw new NotFoundException(
@@ -51,33 +68,16 @@ export class FilmsDataProvider {
     }
 
     return {
-      total: filmData.schedule.length,
-      items: filmData.schedule,
+      total: filmData.schedules.length,
+      items: filmData.schedules.map(this.convertToScheduleDto.bind(this)),
     };
   }
 
   async locateFilmById(filmId: string) {
-    const filmData = await this.cinemaFilmModel.findOne({ id: filmId }).exec();
+    const filmData = await this.filmRepository.findOne({
+      where: { id: filmId },
+      relations: ['schedules'],
+    });
     return filmData;
-  }
-
-  async reserveSeat(
-    filmId: string,
-    sessionId: string,
-    seatPosition: string,
-  ): Promise<boolean> {
-    const result = await this.cinemaFilmModel
-      .updateOne(
-        {
-          id: filmId,
-          schedule: {
-            $elemMatch: { id: sessionId, taken: { $ne: seatPosition } },
-          },
-        },
-        { $addToSet: { 'schedule.$.taken': seatPosition } },
-      )
-      .exec();
-
-    return result.modifiedCount === 1;
   }
 }
