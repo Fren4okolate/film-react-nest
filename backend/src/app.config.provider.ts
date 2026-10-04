@@ -1,29 +1,38 @@
-import { ConfigModule } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Film } from './films/entities/film.entity';
+import { Schedule } from './films/entities/schedule.entity';
 
-export const configProvider = {
-  imports: [ConfigModule.forRoot()],
-  provide: 'CONFIG',
-  useValue: <AppConfig>{
-    database: {
-      driver: process.env.DATABASE_DRIVER || 'postgres',
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: process.env.DATABASE_PORT || '5432',
-      user: process.env.DATABASE_USERNAME || 'film_user',
-      password: process.env.DATABASE_PASSWORD || 'film_pass',
-      name: process.env.DATABASE_NAME || 'film_db',
-    },
-  },
-};
+export function createDatabaseOptions(
+  config: ConfigService,
+): TypeOrmModuleOptions {
+  const port = config.get<string>('DATABASE_PORT');
+  const host = config.get<string>('DATABASE_HOST');
+  const username = config.get<string>('DATABASE_USERNAME');
+  const password = config.get<string>('DATABASE_PASSWORD');
+  const database = config.get<string>('DATABASE_NAME');
+  const databaseUrl = config.get<string>('DATABASE_URL');
+  const url = databaseUrl ? new URL(databaseUrl) : undefined;
 
-export interface AppConfig {
-  database: AppConfigDatabase;
-}
+  if (url) {
+    // pg отдаёт приоритет URL, поэтому включаем в него явные настройки.
+    if (host !== undefined) url.hostname = host;
+    if (port !== undefined) url.port = port;
+    if (username !== undefined) url.username = username;
+    if (password !== undefined) url.password = password;
+    if (database !== undefined)
+      url.pathname = `/${encodeURIComponent(database)}`;
+  }
 
-export interface AppConfigDatabase {
-  driver: string;
-  host: string;
-  port: string;
-  user: string;
-  password: string;
-  name: string;
+  return {
+    type: config.getOrThrow<'postgres'>('DATABASE_DRIVER'),
+    url: url?.toString(),
+    host,
+    port: port ? Number(port) : undefined,
+    username,
+    password,
+    database,
+    entities: [Film, Schedule],
+    synchronize: false,
+  };
 }

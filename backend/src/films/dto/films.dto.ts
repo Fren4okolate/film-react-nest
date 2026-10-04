@@ -27,6 +27,18 @@ export class GetFilmDto {
   @IsString()
   id: string;
 
+  @IsNumber()
+  rating: number;
+
+  @IsString()
+  director: string;
+
+  @IsArray()
+  tags: string[];
+
+  @IsString()
+  about: string;
+
   @IsString()
   title: string;
 

@@ -48,6 +48,6 @@ export class OrderResponseDto {
   items: TicketDto[];
   updatedSessions: Array<{
     sessionId: string;
-    taken: string;
+    taken: string[];
   }>;
 }

@@ -21,8 +21,11 @@ export class Schedule {
   @Column('decimal')
   price: number;
 
-  @Column('text')
-  taken: string;
+  @Column('simple-array')
+  taken: string[];
+
+  @Column('uuid', { nullable: true })
+  filmId: string;
 
   @ManyToOne(() => Film, (film) => film.schedules)
   @JoinColumn({ name: 'filmId' })
