@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 FROM node:22-alpine AS dependencies
 WORKDIR /app
 COPY package*.json ./
@@ -12,7 +11,7 @@ RUN npm run build
 FROM node:22-alpine AS production-dependencies
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --omit=optional --no-audit --no-fund
 
 FROM node:22-alpine AS runtime
 LABEL org.opencontainers.image.source="https://github.com/Fren4okolate/film-react-nest"
