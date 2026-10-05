@@ -2,55 +2,55 @@ import { IsNumber, IsString, IsArray } from 'class-validator';
 
 export class GetScheduleDto {
   @IsString()
-  id: string;
+  id!: string;
 
   @IsString()
-  daytime: string;
+  daytime!: string;
 
   @IsNumber()
-  hall: number;
+  hall!: number;
 
   @IsNumber()
-  rows: number;
+  rows!: number;
 
   @IsNumber()
-  seats: number;
+  seats!: number;
 
   @IsNumber()
-  price: number;
+  price!: number;
 
   @IsArray()
-  taken: string[];
+  taken!: string[];
 }
 
 export class GetFilmDto {
   @IsString()
-  id: string;
+  id!: string;
 
   @IsNumber()
-  rating: number;
+  rating!: number;
 
   @IsString()
-  director: string;
+  director!: string;
 
   @IsArray()
-  tags: string[];
+  tags!: string[];
 
   @IsString()
-  about: string;
+  about!: string;
 
   @IsString()
-  title: string;
+  title!: string;
 
   @IsString()
-  description: string;
+  description!: string;
 
   @IsString()
-  image: string;
+  image!: string;
 
   @IsString()
-  cover: string;
+  cover!: string;
 
   @IsArray()
-  schedule: GetScheduleDto[];
+  schedule!: GetScheduleDto[];
 }

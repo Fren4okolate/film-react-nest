@@ -1,0 +1,96 @@
+services:
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?Set DATABASE_NAME in .env}
+      POSTGRES_USER: ${DATABASE_USERNAME:?Set DATABASE_USERNAME in .env}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+      - ./backend/test/prac.init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/test/prac.films.sql:/docker-entrypoint-initdb.d/02-films.sql:ro
+      - ./backend/test/prac.shedules.sql:/docker-entrypoint-initdb.d/03-schedules.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [film]
+
+  backend:
+    image: ${REGISTRY_IMAGE_PREFIX:?Set REGISTRY_IMAGE_PREFIX in .env}-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/api/afisha/films').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [film]
+
+  frontend:
+    image: ${REGISTRY_IMAGE_PREFIX:?Set REGISTRY_IMAGE_PREFIX in .env}-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/afisha}
+        VITE_CDN_URL: ${VITE_CDN_URL:-/content/afisha}
+    restart: on-failure
+    volumes:
+      - frontend_dist:/var/www/frontend
+    networks: [film]
+
+  nginx:
+    image: ${REGISTRY_IMAGE_PREFIX:?Set REGISTRY_IMAGE_PREFIX in .env}-nginx:${IMAGE_TAG:-latest}
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    environment:
+      BACKEND_PORT: ${PORT:-3000}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - frontend_dist:/var/www/frontend:ro
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [film]
+
+  pgadmin:
+    image: dpage/pgadmin4:9.9
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Set PGADMIN_EMAIL in .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in .env}
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+    ports:
+      - "127.0.0.1:${PGADMIN_PORT:-8080}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      database:
+        condition: service_healthy
+    networks: [film]
+
+volumes:
+  database_data:
+  frontend_dist:
+  pgadmin_data:
+
+networks:
+  film:

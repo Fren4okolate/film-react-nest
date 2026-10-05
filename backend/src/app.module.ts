@@ -1,5 +1,5 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as path from 'node:path';
@@ -12,6 +12,8 @@ import { OrderController } from './order/order.controller';
 import { OrderService } from './order/order.service';
 import { FilmsRepository } from './repository/films.repository';
 import { AppRepository } from './repository/app.repository';
+import { LoggerModule } from './logger/logger.module';
+import { HttpLoggingInterceptor } from './logger/http-logging.interceptor';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { AppRepository } from './repository/app.repository';
       isGlobal: true,
       cache: true,
     }),
+    LoggerModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -34,6 +37,7 @@ import { AppRepository } from './repository/app.repository';
     FilmsService,
     OrderService,
     { provide: FilmsRepository, useClass: AppRepository },
+    { provide: APP_INTERCEPTOR, useClass: HttpLoggingInterceptor },
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

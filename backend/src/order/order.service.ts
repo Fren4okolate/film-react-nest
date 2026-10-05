@@ -36,6 +36,9 @@ export class OrderService {
 
       for (const { film, session, row, seat } of tickets) {
         const schedule = schedules.get(session);
+        if (!schedule) {
+          throw new ConflictException(`Сеанс с кодом ${session} не найден`);
+        }
         if (schedule.filmId !== film) {
           throw new ConflictException(
             `Сеанс ${session} не относится к фильму ${film}`,
