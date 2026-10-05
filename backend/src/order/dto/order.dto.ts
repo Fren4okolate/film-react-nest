@@ -10,22 +10,22 @@ import { Type } from 'class-transformer';
 
 export class TicketDto {
   @IsString()
-  film: string;
+  film!: string;
 
   @IsString()
-  session: string;
+  session!: string;
 
   @IsString()
-  daytime: string;
+  daytime!: string;
 
   @IsNumber()
-  row: number;
+  row!: number;
 
   @IsNumber()
-  seat: number;
+  seat!: number;
 
   @IsNumber()
-  price: number;
+  price!: number;
 }
 
 export class CreateOrderDto {
@@ -40,13 +40,13 @@ export class CreateOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TicketDto)
-  tickets: TicketDto[];
+  tickets!: TicketDto[];
 }
 
 export class OrderResponseDto {
-  total: number;
-  items: TicketDto[];
-  updatedSessions: Array<{
+  total!: number;
+  items!: TicketDto[];
+  updatedSessions!: Array<{
     sessionId: string;
     taken: string[];
   }>;

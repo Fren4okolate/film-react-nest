@@ -4,30 +4,30 @@ import { Film } from './film.entity';
 @Entity('schedules')
 export class Schedule {
   @PrimaryColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  daytime: string;
+  daytime!: string;
 
   @Column('int')
-  hall: number;
+  hall!: number;
 
   @Column('int')
-  rows: number;
+  rows!: number;
 
   @Column('int')
-  seats: number;
+  seats!: number;
 
   @Column('decimal')
-  price: number;
+  price!: number;
 
   @Column('simple-array')
-  taken: string[];
+  taken!: string[];
 
   @Column('uuid', { nullable: true })
-  filmId: string;
+  filmId!: string;
 
   @ManyToOne(() => Film, (film) => film.schedules)
   @JoinColumn({ name: 'filmId' })
-  film: Film;
+  film!: Film;
 }

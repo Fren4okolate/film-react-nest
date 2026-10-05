@@ -1,0 +1,11 @@
+{
+  "name": "film-deployment",
+  "private": true,
+  "scripts": {
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "test": "npm --prefix backend test -- --runInBand",
+    "test:e2e": "npm --prefix backend run test:e2e -- --runInBand",
+    "test:deploy": "node deploy/smoke.mjs"
+  }
+}
