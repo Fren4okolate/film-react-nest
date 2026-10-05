@@ -44,6 +44,7 @@ Docker Compose читает корневой `.env`, пример — `.env.exam
 | `COMPOSE_PROJECT_NAME` | Имя стека и префикс его томов |
 | `REGISTRY_IMAGE_PREFIX` | Префикс образов, например `ghcr.io/fren4okolate/film-react-nest` |
 | `IMAGE_TAG` | Тег образов: `review-2`, `main`, `latest` или `sha-…` |
+| `HTTP_BIND_ADDRESS` | Адрес привязки nginx: `0.0.0.0` для прямого доступа или `127.0.0.1` за nginx хоста |
 | `HTTP_PORT` | Внешний HTTP-порт nginx, по умолчанию 80 |
 | `NODE_ENV`, `PORT` | Режим и внутренний порт бэкенда |
 | `LOGGER_FORMAT` | `dev`, `json` или `tskv`; без настройки в production используется JSON |
@@ -128,5 +129,7 @@ ssh -L 8080:127.0.0.1:8080 USER@SERVER
 ```
 
 После этого откройте `http://localhost:8080`. Для обновления укажите новый тег в `.env` и повторите `sh deploy/update.sh`. Для возврата к предыдущей версии укажите её `sha-…` тег; том PostgreSQL сохраняется.
+
+Если на сервере уже работает nginx с другими сайтами, задайте в `.env` `HTTP_BIND_ADDRESS=127.0.0.1` и свободный `HTTP_PORT`, например `8081`. Контейнер будет доступен только локально. Шаблон `deploy/nginx-host.conf.template` описывает отдельный виртуальный хост: подставьте в него `APP_DOMAIN` и `HTTP_PORT` через `envsubst '${APP_DOMAIN} ${HTTP_PORT}'`, разместите результат в конфигурации nginx хоста и проверьте `nginx -t` перед перезагрузкой конфигурации. Для HTTP-проверки сертификата предусмотрен каталог `/var/www/film-acme`.
 
 HTTPS и отдельный поддомен API можно подключить после выбора домена. Текущая конфигурация использует единый origin и путь `/api/afisha`.
